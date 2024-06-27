@@ -9,7 +9,7 @@ namespace pcileech_web.Contollers
     [ApiController]
     public class ApiController : Controller
     {
-        private delegate void OnProgressNotify(ulong success, ulong fail, ulong total);
+        private delegate void OnProgressNotify(ulong success, ulong fail, ulong total,ulong speed);
 
         [DllImport("pcileech.dll")]
         static extern int StartDump(OnProgressNotify opn,string outPath);
@@ -34,11 +34,19 @@ namespace pcileech_web.Contollers
                     await Response.StartAsync();
 
                     var sw = new StreamWriter(Response.BodyWriter.AsStream(), Encoding.UTF8);
-                    var opn = new OnProgressNotify((ulong success, ulong fail, ulong total) => {
+                    var opn = new OnProgressNotify((ulong success, ulong fail, ulong total, ulong speed) => {
                         dic["success"] = success / 256;
                         dic["fail"] = fail / 256;
                         dic["total"] = total / 256;
                         dic["progress"] = (success + fail) * 100.0 / total;
+                        if (speed >= 2048)
+                        {
+                            dic["speed"] = (speed>>10) + " MB/S";
+                        }
+                        else
+                        {
+                            dic["speed"] = speed+" KB/S";
+                        }
                         sw.WriteLine(JsonConvert.SerializeObject(dic));
                         sw.Flush();
                     });
