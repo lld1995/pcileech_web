@@ -50,25 +50,49 @@ namespace pcileech_web.Contollers
                 try
                 {
 
-                    //int maxRootLength = 0;
-                    //DriveInfo[] drives = DriveInfo.GetDrives();
-                    //DriveInfo selectDrive = null;
-                    //foreach (var drive in drives)
-                    //{
-                    //    if (drive.RootDirectory.Name.Length > maxRootLength && Environment.CurrentDirectory.StartsWith(drive.RootDirectory.Name))
-                    //    {
-                    //        maxRootLength = drive.RootDirectory.Name.Length;
-                    //        selectDrive = drive;
-                    //    }
-                    //}
-                    //if (selectDrive == null)
-                    //{
+                    int maxRootLength = 0;
+                    DriveInfo[] drives = DriveInfo.GetDrives();
+                    DriveInfo selectDrive = null;
+                    foreach (var drive in drives)
+                    {
+                        if (drive.RootDirectory.Name.Length > maxRootLength && Environment.CurrentDirectory.StartsWith(drive.RootDirectory.Name))
+                        {
+                            maxRootLength = drive.RootDirectory.Name.Length;
+                            selectDrive = drive;
+                        }
+                    }
+                    if (selectDrive == null)
+                    {
 
-                    //}
-                    //else
-                    //{
-                    //    selectDrive.AvailableFreeSpace/selectDrive.TotalSize
-                    //}
+                    }
+                    else
+                    {
+                        var availableFreeSpace = selectDrive.AvailableFreeSpace;
+                        var files = Directory.GetFiles("mem/");
+                        for (int i = 0; i < files.Length; i++)
+                        {
+                            var surplusRate = availableFreeSpace / (double)selectDrive.TotalSize;
+                            Console.WriteLine("surplusRate:" + surplusRate);
+                            if (surplusRate < 0.1)
+                            {
+                                try
+                                {
+                                    var fi = new FileInfo(files[i]);
+                                    var fiLen= fi.Length;
+                                    System.IO.File.Delete(files[i]);
+                                    availableFreeSpace += fiLen;
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e);
+                                }
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
 
                     Response.ContentType = "text/event-stream; charset=utf-8";
                     Response.Headers["Cache-Control"] = "no-cache";
